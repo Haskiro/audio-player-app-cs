@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:AudioPlayerApp.Converters"
+             x:Class="AudioPlayerApp.Views.PlayerPage"
+             Title="Аудиоплеер"
+             BackgroundColor="{DynamicResource PageBackgroundColor}">
+    
+    <ContentPage.Resources>
+        <converters:BoolToPlayPauseConverter x:Key="BoolToPlayPauseConverter" />
+        
+        <Style TargetType="Label">
+            <Setter Property="TextColor" Value="{DynamicResource PrimaryTextColor}" />
+            <Setter Property="FontSize" Value="16" />
+        </Style>
+        
+        <Style TargetType="Button" x:Key="ControlButton">
+            <Setter Property="BackgroundColor" Value="{DynamicResource AccentColor}" />
+            <Setter Property="TextColor" Value="White" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="Margin" Value="4" />
+        </Style>
+        
+        <Style TargetType="Button" x:Key="SmallControlButton">
+            <Setter Property="BackgroundColor" Value="{DynamicResource SecondaryColor}" />
+            <Setter Property="TextColor" Value="White" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="WidthRequest" Value="40" />
+            <Setter Property="HeightRequest" Value="40" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="4" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+            
+            <!-- Информация о текущем треке -->
+            <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
+                <Label Text="{Binding CurrentTrack.Title}" 
+                       FontSize="20" 
+                       FontAttributes="Bold" 
+                       HorizontalOptions="Center" />
+                <Label Text="{Binding CurrentTrack.Artist}" 
+                       FontSize="16" 
+                       HorizontalOptions="Center" />
+                <Label Text="{Binding CurrentTrack.Album}" 
+                       FontSize="14" 
+                       HorizontalOptions="Center" />
+            </VerticalStackLayout>
+            
+            <!-- Прогресс воспроизведения -->
+            <VerticalStackLayout Spacing="10">
+                <Slider Minimum="0" 
+                        Maximum="{Binding Duration}" 
+                        Value="{Binding Position}"/>
+                
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
+                    <Label Text="{Binding CurrentTimeFormatted}" />
+                    <Label Text="/" />
+                    <Label Text="{Binding TotalTimeFormatted}" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+            
+            <!-- Основные элементы управления -->
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
+                <Button Text="⏮" 
+                        Command="{Binding PlayPreviousCommand}"
+                        Style="{StaticResource SmallControlButton}" />
+                
+                <Button Text="{Binding IsPlaying, Converter={StaticResource BoolToPlayPauseConverter}}"
+                        Command="{Binding PlayPauseCommand}"
+                        Style="{StaticResource ControlButton}" />
+                
+                <Button Text="⏭" 
+                        Command="{Binding PlayNextCommand}"
+                        Style="{StaticResource SmallControlButton}" />
+            </HorizontalStackLayout>
+            
+            <!-- Дополнительные элементы управления -->
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
+                <Button Text="⏹" 
+                        Command="{Binding StopCommand}"
+                        Style="{StaticResource SmallControlButton}" />
+                
+                <Button Text="⏪" 
+                        Command="{Binding SeekBackwardCommand}"
+                        Style="{StaticResource SmallControlButton}" />
+                
+                <Button Text="⏩" 
+                        Command="{Binding SeekForwardCommand}"
+                        Style="{StaticResource SmallControlButton}" />
+                
+                <Button Text="{Binding PlaybackSpeed, StringFormat='{0}x'}" 
+                        Command="{Binding ChangeSpeedCommand}"
+                        Style="{StaticResource SmallControlButton}" />
+            </HorizontalStackLayout>
+            
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

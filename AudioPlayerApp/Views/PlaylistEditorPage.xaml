@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:AudioPlayerApp.Views"
+             x:Class="AudioPlayerApp.Views.PlaylistEditorPage"
+             Title="Редактор плейлистов"
+             BackgroundColor="{DynamicResource PageBackgroundColor}">
+
+    <Grid Padding="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="2*" />
+            <RowDefinition Height="3*" />
+        </Grid.RowDefinitions>
+
+        <!-- Список плейлистов -->
+        <CollectionView ItemsSource="{Binding Playlists}"
+                        SelectionMode="Single"
+                        SelectedItem="{Binding SelectedPlaylist}">
+            <CollectionView.Header>
+                <Button Text="Добавить плейлист"
+                        Command="{Binding AddPlaylistCommand}"
+                        Margin="0,0,0,10" />
+            </CollectionView.Header>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItem Text="Удалить"
+                                       BackgroundColor="Red"
+                                       Command="{Binding Source={RelativeSource AncestorType={x:Type local:PlaylistEditorPage}}, Path=BindingContext.DeletePlaylistCommand}"
+                                       CommandParameter="{Binding}" />
+                            <SwipeItem Text="Редактировать"
+                                       BackgroundColor="Blue"
+                                       Command="{Binding Source={RelativeSource AncestorType={x:Type local:PlaylistEditorPage}}, Path=BindingContext.EditPlaylistNameCommand}"
+                                       CommandParameter="{Binding}" />
+                        </SwipeView.RightItems>
+
+                        <Grid Padding="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Label Text="{Binding Name}"
+                                   FontSize="16" />
+
+                            <Button Text="Добавить треки"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type local:PlaylistEditorPage}}, Path=BindingContext.AddTrackToPlaylistCommand}"
+                                    CommandParameter="{Binding}"
+                                    Grid.Column="1" />
+                        </Grid>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Список треков выбранного плейлиста -->
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding SelectedPlaylist.Tracks}"
+                        SelectionMode="Single"
+                        SelectedItem="{Binding SelectedTrack}">
+            <CollectionView.Header>
+                <Label Text="Треки в плейлисте" FontSize="18" Margin="0,10,0,5" />
+            </CollectionView.Header>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Padding="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label Text="{Binding Title}" />
+                        <Button Text="Удалить"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type local:PlaylistEditorPage}}, Path=BindingContext.RemoveTrackFromPlaylistCommand}"
+                                CommandParameter="{Binding Source={RelativeSource Self}, Path=BindingContext}" 
+                                Grid.Column="1"/>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

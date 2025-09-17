@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- Цвета -->
+    <Color x:Key="PrimaryColor">#512BD4</Color>
+    <Color x:Key="SecondaryColor">#DFD8F7</Color>
+    <Color x:Key="TertiaryColor">#2B0B98</Color>
+    <Color x:Key="AccentColor">#512BD4</Color>
+
+    <Color x:Key="PageBackgroundColor">#F5F5F5</Color>
+    <Color x:Key="PrimaryTextColor">#000000</Color>
+    <Color x:Key="SecondaryTextColor">#7B7B7B</Color>
+
+    <!-- Навигационная панель -->
+    <Style TargetType="NavigationPage">
+        <Setter Property="BarBackgroundColor" Value="{DynamicResource PrimaryColor}" />
+        <Setter Property="BarTextColor" Value="White" />
+    </Style>
+
+    <!-- Табы в Shell -->
+    <Style TargetType="Shell">
+        <Setter Property="Shell.TabBarBackgroundColor" Value="{DynamicResource PrimaryColor}" />
+        <Setter Property="Shell.TabBarTitleColor" Value="White" />
+        <Setter Property="Shell.TabBarUnselectedColor" Value="{DynamicResource SecondaryTextColor}" />
+    </Style>
+</ResourceDictionary>
