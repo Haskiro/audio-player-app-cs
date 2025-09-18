@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:AudioPlayerApp.Views"
-             x:Class="AudioPlayerApp.Views.PlaylistEditorPage"
+             x:Class="AudioPlayerApp.Views.PlaylistEditorPage" x:Name="ThisPage"
              Title="Редактор плейлистов"
              BackgroundColor="{DynamicResource PageBackgroundColor}">
 
@@ -28,11 +28,11 @@
                         <SwipeView.RightItems>
                             <SwipeItem Text="Удалить"
                                        BackgroundColor="Red"
-                                       Command="{Binding Source={RelativeSource AncestorType={x:Type local:PlaylistEditorPage}}, Path=BindingContext.DeletePlaylistCommand}"
+                                       Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.DeletePlaylistCommand}"
                                        CommandParameter="{Binding}" />
                             <SwipeItem Text="Редактировать"
                                        BackgroundColor="Blue"
-                                       Command="{Binding Source={RelativeSource AncestorType={x:Type local:PlaylistEditorPage}}, Path=BindingContext.EditPlaylistNameCommand}"
+                                       Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.EditPlaylistNameCommand}"
                                        CommandParameter="{Binding}" />
                         </SwipeView.RightItems>
 
@@ -46,7 +46,7 @@
                                    FontSize="16" />
 
                             <Button Text="Добавить треки"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type local:PlaylistEditorPage}}, Path=BindingContext.AddTrackToPlaylistCommand}"
+                                    Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.AddTrackToPlaylistCommand}"
                                     CommandParameter="{Binding}"
                                     Grid.Column="1" />
                         </Grid>
@@ -74,8 +74,8 @@
 
                         <Label Text="{Binding Title}" />
                         <Button Text="Удалить"
-                                Command="{Binding Source={RelativeSource AncestorType={x:Type local:PlaylistEditorPage}}, Path=BindingContext.RemoveTrackFromPlaylistCommand}"
-                                CommandParameter="{Binding Source={RelativeSource Self}, Path=BindingContext}" 
+                                Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.RemoveTrackFromPlaylistCommand}"
+                                CommandParameter="{Binding}" 
                                 Grid.Column="1"/>
                     </Grid>
                 </DataTemplate>

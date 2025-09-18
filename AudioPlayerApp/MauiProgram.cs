@@ -19,7 +19,7 @@ public static class MauiProgram
 
         builder
             .UseMauiApp<App>()
-            .UseMauiCommunityToolkit() // для CommunityToolkit.Controls и Behavior
+            .UseMauiCommunityToolkit() // если используешь CommunityToolkit
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -29,20 +29,31 @@ public static class MauiProgram
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
+
         // ===== Регистрация сервисов =====
+#if IOS
         Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions
             .AddSingleton<IAudioService, IOSAudioService>(builder.Services);
+#else
+        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions
+            .AddSingleton<IAudioService, AudioService>(builder.Services);
+#endif
 
         // ===== Регистрация ViewModels =====
-        builder.Services.AddSingleton<PlayerViewModel>();
-        builder.Services.AddSingleton<PlaylistViewModel>();
+        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions
+            .AddSingleton<PlayerViewModel>(builder.Services);
+        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions
+            .AddSingleton<PlaylistViewModel>(builder.Services);
 
         // ===== Регистрация страниц =====
-        builder.Services.AddSingleton<PlayerPage>();
-        builder.Services.AddSingleton<PlaylistEditorPage>();
+        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions
+            .AddSingleton<PlayerPage>(builder.Services);
+        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions
+            .AddSingleton<PlaylistEditorPage>(builder.Services);
 
         // ===== Регистрация главной страницы (Shell) =====
-        builder.Services.AddSingleton<AppShell>();
+        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions
+            .AddSingleton<AppShell>(builder.Services);
 
         return builder.Build();
     }

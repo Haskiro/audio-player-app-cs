@@ -5,7 +5,7 @@
        x:Class="AudioPlayerApp.AppShell"
        Title="AudioPlayerApp"
        FlyoutBehavior="Disabled">
-
+    
     <TabBar>
         <Tab Title="Плеер">
             <ShellContent ContentTemplate="{DataTemplate views:PlayerPage}" />

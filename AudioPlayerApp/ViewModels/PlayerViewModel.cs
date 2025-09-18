@@ -1,4 +1,6 @@
 using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using AudioPlayerApp.Models;
 using AudioPlayerApp.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -30,6 +32,12 @@ public partial class PlayerViewModel : ObservableObject
     [ObservableProperty]
     private string _totalTimeFormatted = "00:00";
 
+    [ObservableProperty]
+    private ObservableCollection<Playlist> _playlists = new();
+
+    [ObservableProperty]
+    private Playlist _selectedPlaylist;
+
     public PlayerViewModel(IAudioService audioService)
     {
         _audioService = audioService;
@@ -51,16 +59,17 @@ public partial class PlayerViewModel : ObservableObject
         }
     }
 
-    public Playlist CurrentPlaylist
+    partial void OnSelectedPlaylistChanged(Playlist value)
     {
-        get => _currentPlaylist;
-        set
+        if (value?.Tracks.Count > 0)
         {
-            if (SetProperty(ref _currentPlaylist, value) && value?.Tracks.Count > 0)
-            {
-                CurrentTrack = value.Tracks[0];
-                _currentTrackIndex = 0;
-            }
+            CurrentTrack = value.Tracks[0];
+            _currentTrackIndex = 0;
+        }
+        else
+        {
+            CurrentTrack = null;
+            _currentTrackIndex = -1;
         }
     }
 
@@ -162,20 +171,20 @@ public partial class PlayerViewModel : ObservableObject
     [RelayCommand]
     private void PlayNext()
     {
-        if (CurrentPlaylist?.Tracks.Count > 0)
+        if (SelectedPlaylist?.Tracks.Count > 0)
         {
-            _currentTrackIndex = (_currentTrackIndex + 1) % CurrentPlaylist.Tracks.Count;
-            CurrentTrack = CurrentPlaylist.Tracks[_currentTrackIndex];
+            _currentTrackIndex = (_currentTrackIndex + 1) % SelectedPlaylist.Tracks.Count;
+            CurrentTrack = SelectedPlaylist.Tracks[_currentTrackIndex];
         }
     }
 
     [RelayCommand]
     private void PlayPrevious()
     {
-        if (CurrentPlaylist?.Tracks.Count > 0)
+        if (SelectedPlaylist?.Tracks.Count > 0)
         {
-            _currentTrackIndex = (_currentTrackIndex - 1 + CurrentPlaylist.Tracks.Count) % CurrentPlaylist.Tracks.Count;
-            CurrentTrack = CurrentPlaylist.Tracks[_currentTrackIndex];
+            _currentTrackIndex = (_currentTrackIndex - 1 + SelectedPlaylist.Tracks.Count) % SelectedPlaylist.Tracks.Count;
+            CurrentTrack = SelectedPlaylist.Tracks[_currentTrackIndex];
         }
     }
 

@@ -73,12 +73,12 @@ public partial class PlaylistViewModel : ObservableObject
 
             if (results == null) return;
 
-            foreach (var result in results)
+            foreach (var file in results)
             {
                 var track = new AudioTrack
                 {
-                    FilePath = result.FullPath,
-                    Title = System.IO.Path.GetFileNameWithoutExtension(result.FileName),
+                    FilePath = file.FullPath,
+                    Title = System.IO.Path.GetFileNameWithoutExtension(file.FileName),
                     Artist = "Неизвестный исполнитель",
                     Duration = TimeSpan.Zero // В реальном приложении можно получить длительность из метаданных
                 };
@@ -94,13 +94,16 @@ public partial class PlaylistViewModel : ObservableObject
             await Application.Current.MainPage.DisplayAlert("Ошибка", $"Не удалось добавить треки: {ex.Message}", "OK");
         }
     }
-
+    
     [RelayCommand]
-    private void RemoveTrackFromPlaylist((Playlist playlist, AudioTrack track) parameters)
+    private void RemoveTrackFromPlaylist(AudioTrack track)
     {
-        parameters.playlist.Tracks.Remove(parameters.track);
-        parameters.playlist.ModifiedDate = DateTime.Now;
-        SavePlaylists();
+        if (SelectedPlaylist != null && track != null)
+        {
+            SelectedPlaylist.Tracks.Remove(track);
+            SelectedPlaylist.ModifiedDate = DateTime.Now;
+            SavePlaylists();
+        }
     }
 
     [RelayCommand]
