@@ -1,209 +1,214 @@
 using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using AudioPlayerApp.Models;
-using AudioPlayerApp.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using AudioPlayerApp.Models;
+using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Dispatching;
 
-namespace AudioPlayerApp.ViewModels;
-
-public partial class PlayerViewModel : ObservableObject
+namespace AudioPlayerApp.ViewModels
 {
-    private readonly IAudioService _audioService;
-    private Playlist _currentPlaylist;
-    private AudioTrack _currentTrack;
-    private int _currentTrackIndex;
-    private double _duration;
-    private bool _isSeeking;
-
-    [ObservableProperty]
-    private double _position;
-
-    [ObservableProperty]
-    private bool _isPlaying;
-
-    [ObservableProperty]
-    private float _playbackSpeed = 1.0f;
-
-    [ObservableProperty]
-    private string _currentTimeFormatted = "00:00";
-
-    [ObservableProperty]
-    private string _totalTimeFormatted = "00:00";
-
-    [ObservableProperty]
-    private ObservableCollection<Playlist> _playlists = new();
-
-    [ObservableProperty]
-    private Playlist _selectedPlaylist;
-
-    public PlayerViewModel(IAudioService audioService)
+    public partial class PlayerViewModel : ObservableObject
     {
-        _audioService = audioService;
-        
-        _audioService.PositionChanged += OnPositionChanged;
-        _audioService.PlaybackStateChanged += OnPlaybackStateChanged;
-        _audioService.PlaybackCompleted += OnPlaybackCompleted;
-    }
+        private readonly IAudioService _audioService;
+        private readonly AppStateService _appStateService;
+        private bool _isUserDraggingSlider;
+        private IDispatcherTimer _updateTimer;
 
-    public AudioTrack CurrentTrack
-    {
-        get => _currentTrack;
-        set
+        [ObservableProperty]
+        private AudioTrack _currentTrack;
+
+        [ObservableProperty]
+        private TimeSpan _position;
+
+        [ObservableProperty]
+        private TimeSpan _duration;
+
+        [ObservableProperty]
+        private bool _isPlaying = true;
+
+        [ObservableProperty]
+        private double _playbackSpeed = 1.0;
+
+        [ObservableProperty]
+        private string _currentTimeFormatted = "00:00";
+
+        [ObservableProperty]
+        private string _totalTimeFormatted = "00:00";
+
+        [ObservableProperty]
+        private double _sliderPosition;
+
+        public PlayerViewModel(IAudioService audioService, AppStateService appStateService)
         {
-            if (SetProperty(ref _currentTrack, value) && value != null)
+            _audioService = audioService;
+            _appStateService = appStateService;
+
+            // Инициализация текущего трека
+            CurrentTrack = _appStateService.CurrentTrack;
+            
+            // Подписка на изменения текущего трека
+            _appStateService.CurrentTrackChanged += OnCurrentTrackChanged;
+
+            // Создаем таймер для обновления позиции
+            _updateTimer = Application.Current.Dispatcher.CreateTimer();
+            _updateTimer.Interval = TimeSpan.FromMilliseconds(100);
+            _updateTimer.Tick += OnUpdateTimerTick;
+            _updateTimer.Start();
+        }
+
+        private void OnUpdateTimerTick(object sender, EventArgs e)
+        {
+            if (_isPlaying && !_isUserDraggingSlider && CurrentTrack != null)
             {
-                PlayTrack(value);
+                var currentPos = _audioService.GetCurrentPosition();
+                Position = TimeSpan.FromSeconds(currentPos);
+                CurrentTimeFormatted = FormatTime(Position);
+                SliderPosition = currentPos;
             }
         }
-    }
 
-    partial void OnSelectedPlaylistChanged(Playlist value)
-    {
-        if (value?.Tracks.Count > 0)
+        private void OnCurrentTrackChanged(object sender, AudioTrack track)
         {
-            CurrentTrack = value.Tracks[0];
-            _currentTrackIndex = 0;
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                CurrentTrack = track;
+                
+                if (track != null)
+                {
+                    // Загружаем длительность трека
+                    var duration = _audioService.GetTrackDuration(track.FilePath);
+                    if (duration > 0)
+                    {
+                        Duration = TimeSpan.FromSeconds(duration);
+                        TotalTimeFormatted = FormatTime(Duration);
+                    }
+                    
+                    // Сбрасываем позицию
+                    Position = TimeSpan.Zero;
+                    CurrentTimeFormatted = "00:00";
+                    SliderPosition = 0;
+                }
+            });
         }
-        else
+
+        public string FormatTime(TimeSpan time)
         {
-            CurrentTrack = null;
-            _currentTrackIndex = -1;
+            return time.ToString(@"mm\:ss");
         }
-    }
 
-    private void OnPositionChanged(object sender, double position)
-    {
-        if (!_isSeeking)
+        partial void OnSliderPositionChanged(double value)
         {
-            Position = position;
-            UpdateTimeFormatted();
+            if (_isUserDraggingSlider)
+            {
+                // Обновляем отображаемое время при перетаскивании слайдера
+                Position = TimeSpan.FromSeconds(value);
+                CurrentTimeFormatted = FormatTime(Position);
+            }
         }
-    }
 
-    private void OnPlaybackStateChanged(object sender, bool isPlaying)
-    {
-        IsPlaying = isPlaying;
-    }
+        [RelayCommand]
+        public void PlayPause()
+        {
+            if (IsPlaying)
+            {
+                Pause();
+            }
+            else
+            {
+                Play();
+            }
+        }
 
-    private void OnPlaybackCompleted(object sender, EventArgs e)
-    {
-        PlayNext();
-    }
+        public void Play()
+        {
+            if (CurrentTrack != null)
+            {
+                _audioService.Play(CurrentTrack.FilePath);
+                IsPlaying = true;
+            }
+        }
 
-    private void PlayTrack(AudioTrack track)
-    {
-        _audioService.Stop();
-        _audioService.Play(track.FilePath);
-        _duration = _audioService.GetDuration();
-        TotalTimeFormatted = FormatTime(_duration);
-        IsPlaying = true;
-    }
-
-    private void UpdateTimeFormatted()
-    {
-        CurrentTimeFormatted = FormatTime(Position);
-    }
-
-    private string FormatTime(double seconds)
-    {
-        var timeSpan = TimeSpan.FromSeconds(seconds);
-        return $"{timeSpan.Minutes:00}:{timeSpan.Seconds:00}";
-    }
-
-    [RelayCommand]
-    private void PlayPause()
-    {
-        if (CurrentTrack == null) return;
-
-        if (IsPlaying)
+        public void Pause()
         {
             _audioService.Pause();
+            IsPlaying = false;
         }
-        else
+
+        [RelayCommand]
+        public void Stop()
         {
-            _audioService.Play(CurrentTrack.FilePath);
+            _audioService.Stop();
+            IsPlaying = false;
+            Position = TimeSpan.Zero;
+            CurrentTimeFormatted = "00:00";
+            SliderPosition = 0;
         }
-    }
 
-    [RelayCommand]
-    private void Stop()
-    {
-        _audioService.Stop();
-        Position = 0;
-        UpdateTimeFormatted();
-    }
-
-    [RelayCommand]
-    private void SeekForward()
-    {
-        var newPosition = Position + 10;
-        if (newPosition > _duration) newPosition = _duration;
-        
-        _audioService.Seek(newPosition);
-        Position = newPosition;
-        UpdateTimeFormatted();
-    }
-
-    [RelayCommand]
-    private void SeekBackward()
-    {
-        var newPosition = Position - 10;
-        if (newPosition < 0) newPosition = 0;
-        
-        _audioService.Seek(newPosition);
-        Position = newPosition;
-        UpdateTimeFormatted();
-    }
-
-    [RelayCommand]
-    private void ChangeSpeed()
-    {
-        var speeds = new[] { 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f };
-        var currentIndex = Array.IndexOf(speeds, PlaybackSpeed);
-        var nextIndex = (currentIndex + 1) % speeds.Length;
-        
-        PlaybackSpeed = speeds[nextIndex];
-        _audioService.SetSpeed(PlaybackSpeed);
-    }
-
-    [RelayCommand]
-    private void PlayNext()
-    {
-        if (SelectedPlaylist?.Tracks.Count > 0)
+        [RelayCommand]
+        public void SeekForward()
         {
-            _currentTrackIndex = (_currentTrackIndex + 1) % SelectedPlaylist.Tracks.Count;
-            CurrentTrack = SelectedPlaylist.Tracks[_currentTrackIndex];
+            var newPosition = _audioService.GetCurrentPosition() + 10;
+            _audioService.Seek(newPosition);
         }
-    }
 
-    [RelayCommand]
-    private void PlayPrevious()
-    {
-        if (SelectedPlaylist?.Tracks.Count > 0)
+        [RelayCommand]
+        public void SeekBackward()
         {
-            _currentTrackIndex = (_currentTrackIndex - 1 + SelectedPlaylist.Tracks.Count) % SelectedPlaylist.Tracks.Count;
-            CurrentTrack = SelectedPlaylist.Tracks[_currentTrackIndex];
+            var newPosition = _audioService.GetCurrentPosition() - 10;
+            if (newPosition < 0) newPosition = 0;
+            _audioService.Seek(newPosition);
         }
-    }
 
-    public void OnSliderDragStarted()
-    {
-        _isSeeking = true;
-    }
+        [RelayCommand]
+        public void ChangeSpeed()
+        {
+            var speeds = new[] { 0.5, 0.75, 1.0, 1.25, 1.5, 2.0 };
+            var currentIndex = Array.IndexOf(speeds, PlaybackSpeed);
+            var nextIndex = (currentIndex + 1) % speeds.Length;
+            PlaybackSpeed = speeds[nextIndex];
+            
+            _audioService.SetSpeed(PlaybackSpeed);
+        }
 
-    public void OnSliderDragCompleted()
-    {
-        _isSeeking = false;
-        _audioService.Seek(Position);
-    }
+        [RelayCommand]
+        public void PlayNext()
+        {
+            var nextTrack = _appStateService.GetNextTrack();
+            if (nextTrack != null)
+            {
+                PlayTrack(nextTrack);
+            }
+        }
 
-    public void Dispose()
-    {
-        _audioService.PositionChanged -= OnPositionChanged;
-        _audioService.PlaybackStateChanged -= OnPlaybackStateChanged;
-        _audioService.PlaybackCompleted -= OnPlaybackCompleted;
-        _audioService.Stop();
+        [RelayCommand]
+        public void PlayPrevious()
+        {
+            var previousTrack = _appStateService.GetPreviousTrack();
+            if (previousTrack != null)
+            {
+                PlayTrack(previousTrack);
+            }
+        }
+
+        public void PlayTrack(AudioTrack track)
+        {
+            if (track == null) return;
+            
+            CurrentTrack = track;
+            _appStateService.SetCurrentTrack(track);
+            Play();
+        }
+
+        public void StartDragging()
+        {
+            _isUserDraggingSlider = true;
+        }
+
+        public void EndDragging()
+        {
+            _isUserDraggingSlider = false;
+            _audioService.Seek(SliderPosition);
+        }
     }
 }

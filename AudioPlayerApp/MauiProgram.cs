@@ -1,13 +1,14 @@
-using AudioPlayerApp.Services;
+using AudioPlayerApp.Models;
+using AudioPlayerApp.Platforms.iOS.Services;
 using AudioPlayerApp.ViewModels;
 using AudioPlayerApp.Views;
 using Microsoft.Extensions.Logging;
 using CommunityToolkit.Maui;
 using Microsoft.Maui.Hosting;
+using System.Collections.ObjectModel;
+using Microsoft.Maui.Controls.Hosting;
 
-#if IOS
-using AudioPlayerApp.Platforms.iOS.Services;
-#endif
+// using Microsoft.Maui.Controls.Hosting;
 
 namespace AudioPlayerApp;
 
@@ -19,7 +20,7 @@ public static class MauiProgram
 
         builder
             .UseMauiApp<App>()
-            .UseMauiCommunityToolkit() // если используешь CommunityToolkit
+            .UseMauiCommunityToolkit()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -29,31 +30,20 @@ public static class MauiProgram
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
+        // Регистрируем коллекцию треков
+        builder.Services.AddSingleton<ObservableCollection<AudioTrack>>();
+        // Регистрация сервисов
+        builder.Services.AddSingleton<IAudioService, IOSAudioService>();
+        builder.Services.AddSingleton<AppStateService>();
+        builder.Services.AddSingleton<FileSystemDataService>(); 
 
-        // ===== Регистрация сервисов =====
-#if IOS
-        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions
-            .AddSingleton<IAudioService, IOSAudioService>(builder.Services);
-#else
-        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions
-            .AddSingleton<IAudioService, AudioService>(builder.Services);
-#endif
+        // Регистрация ViewModels
+        builder.Services.AddSingleton<PlaylistViewModel>();
+        builder.Services.AddSingleton<PlayerViewModel>();
 
-        // ===== Регистрация ViewModels =====
-        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions
-            .AddSingleton<PlayerViewModel>(builder.Services);
-        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions
-            .AddSingleton<PlaylistViewModel>(builder.Services);
-
-        // ===== Регистрация страниц =====
-        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions
-            .AddSingleton<PlayerPage>(builder.Services);
-        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions
-            .AddSingleton<PlaylistEditorPage>(builder.Services);
-
-        // ===== Регистрация главной страницы (Shell) =====
-        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions
-            .AddSingleton<AppShell>(builder.Services);
+        // Регистрация страниц
+        builder.Services.AddTransient<PlaylistEditorPage>();
+        builder.Services.AddTransient<PlayerPage>();
 
         return builder.Build();
     }

@@ -2,17 +2,18 @@ using System;
 using System.Globalization;
 using Microsoft.Maui.Controls;
 
-namespace AudioPlayerApp.Converters;
-
-public class BoolToPlayPauseConverter : IValueConverter
+namespace AudioPlayerApp.Converters
 {
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public class BoolToPlayPauseConverter : IValueConverter
     {
-        return value is bool isPlaying && isPlaying ? "⏸" : "▶";
-    }
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return (value is bool && (bool)value) ? "⏸" : "▶";
+        }
 
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

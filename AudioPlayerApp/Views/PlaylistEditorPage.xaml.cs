@@ -1,5 +1,4 @@
 using AudioPlayerApp.ViewModels;
-using Microsoft.Maui.Controls;
 
 namespace AudioPlayerApp.Views;
 

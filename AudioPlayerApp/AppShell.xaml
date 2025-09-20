@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-       xmlns:views="clr-namespace:AudioPlayerApp.Views"
+       xmlns:local="clr-namespace:AudioPlayerApp.Views"
        x:Class="AudioPlayerApp.AppShell"
        Title="AudioPlayerApp"
        FlyoutBehavior="Disabled">
-    
+
     <TabBar>
-        <Tab Title="Плеер">
-            <ShellContent ContentTemplate="{DataTemplate views:PlayerPage}" />
-        </Tab>
         <Tab Title="Плейлисты">
-            <ShellContent ContentTemplate="{DataTemplate views:PlaylistEditorPage}" />
+            <ShellContent Route="PlaylistEditorPage" ContentTemplate="{DataTemplate local:PlaylistEditorPage}" />
+        </Tab>
+        <Tab Title="Плеер">
+            <ShellContent Route="PlayerPage" ContentTemplate="{DataTemplate local:PlayerPage}" />
         </Tab>
     </TabBar>
 </Shell>
